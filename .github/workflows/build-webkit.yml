@@ -50,7 +50,15 @@ jobs:
       - name: Clone WebKit
         shell: powershell
         run: |
-          git -c core.longpaths=true clone --depth 1 --filter=blob:none --single-branch https://github.com/WebKit/WebKit.git WebKit
+          git -c core.longpaths=true clone --depth 1 --single-branch https://github.com/WebKit/WebKit.git WebKit
+
+      - name: Verify WebKit checkout
+        shell: powershell
+        run: |
+          $script = Join-Path $env:GITHUB_WORKSPACE "WebKit\Tools\Scripts\update-webkit-win-libs.py"
+          if (-not (Test-Path $script)) {
+            throw "WebKit checkout missing update-webkit-win-libs.py. Clone may be incomplete."
+          }
 
       - name: Resolve WebKit SHA
         id: webkit-sha
