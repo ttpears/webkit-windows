@@ -13,6 +13,8 @@ jobs:
   build:
     runs-on: windows-latest
     timeout-minutes: 720
+    env:
+      WEBKIT_DIR: D:\a\_temp\WebKit
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,12 +52,12 @@ jobs:
       - name: Clone WebKit
         shell: powershell
         run: |
-          git -c core.longpaths=true clone --depth 1 --single-branch https://github.com/WebKit/WebKit.git WebKit
+          git -c core.longpaths=true clone --depth 1 --single-branch https://github.com/WebKit/WebKit.git $env:WEBKIT_DIR
 
       - name: Verify WebKit checkout
         shell: powershell
         run: |
-          $script = Join-Path $env:GITHUB_WORKSPACE "WebKit\Tools\Scripts\update-webkit-win-libs.py"
+          $script = Join-Path $env:WEBKIT_DIR "Tools\Scripts\update-webkit-win-libs.py"
           if (-not (Test-Path $script)) {
             throw "WebKit checkout missing update-webkit-win-libs.py. Clone may be incomplete."
           }
@@ -64,13 +66,13 @@ jobs:
         id: webkit-sha
         shell: powershell
         run: |
-          $sha = (git -C WebKit rev-parse HEAD).Trim()
+          $sha = (git -C $env:WEBKIT_DIR rev-parse HEAD).Trim()
           "sha=$sha" >> $env:GITHUB_OUTPUT
 
       - name: Cache WebKit Windows libraries
         uses: actions/cache@v4
         with:
-          path: WebKit/WebKitLibraries/win
+          path: ${{ env.WEBKIT_DIR }}/WebKitLibraries/win
           key: webkit-win-libs-${{ runner.os }}-${{ steps.webkit-sha.outputs.sha }}
           restore-keys: |
             webkit-win-libs-${{ runner.os }}-
@@ -78,7 +80,7 @@ jobs:
       - name: Cache WebKit build output
         uses: actions/cache@v4
         with:
-          path: WebKit/WebKitBuild
+          path: ${{ env.WEBKIT_DIR }}/WebKitBuild
           key: webkit-build-${{ runner.os }}-${{ steps.webkit-sha.outputs.sha }}
           restore-keys: |
             webkit-build-${{ runner.os }}-
@@ -101,15 +103,15 @@ jobs:
           if (-not (Test-Path $vcvars)) { throw "vcvars64.bat not found at $vcvars" }
 
           $env:PATH = "C:\xampp\apache\bin;C:\xampp\perl\bin;C:\xampp\mysql\bin;C:\Program Files\CMake\bin;C:\Program Files\Ninja;C:\Program Files\Git\usr\bin;C:\Program Files\Git\bin;C:\Program Files\LLVM\bin;C:\Program Files (x86)\GnuWin32\bin;$env:PATH"
-          $env:WEBKIT_LIBRARIES = Join-Path $env:GITHUB_WORKSPACE "WebKit\WebKitLibraries\win"
-          $env:WEBKIT_OUTPUTDIR = Join-Path $env:GITHUB_WORKSPACE "WebKit\WebKitBuild"
-          $env:WEBKIT_TESTFONTS = Join-Path $env:GITHUB_WORKSPACE "WebKit\Tools\WebKitTestRunner\fonts"
+          $env:WEBKIT_LIBRARIES = Join-Path $env:WEBKIT_DIR "WebKitLibraries\win"
+          $env:WEBKIT_OUTPUTDIR = Join-Path $env:WEBKIT_DIR "WebKitBuild"
+          $env:WEBKIT_TESTFONTS = Join-Path $env:WEBKIT_DIR "Tools\WebKitTestRunner\fonts"
           $env:DUMPRENDERTREE_TEMP = $env:TEMP
           $env:CC = "clang-cl"
           $env:CXX = "clang-cl"
           $env:PATH = "$env:WEBKIT_LIBRARIES\bin;$env:PATH"
 
-          cmd /c "call `"$vcvars`" && cd WebKit && python Tools\Scripts\update-webkit-win-libs.py && perl Tools\Scripts\build-webkit --release --skip-library-update"
+          cmd /c "call `"$vcvars`" && cd /d `"$env:WEBKIT_DIR`" && python Tools\Scripts\update-webkit-win-libs.py && perl Tools\Scripts\build-webkit --release --skip-library-update"
 
       - name: Package MiniBrowser zip
         shell: powershell
@@ -117,8 +119,8 @@ jobs:
           $out = Join-Path $env:GITHUB_WORKSPACE "dist"
           New-Item -ItemType Directory -Force -Path $out | Out-Null
 
-          $bin = Join-Path $env:GITHUB_WORKSPACE "WebKit\WebKitBuild\Release\bin64"
-          $libs = Join-Path $env:GITHUB_WORKSPACE "WebKit\WebKitLibraries\win\bin"
+          $bin = Join-Path $env:WEBKIT_DIR "WebKitBuild\Release\bin64"
+          $libs = Join-Path $env:WEBKIT_DIR "WebKitLibraries\win\bin"
 
           $pkg = Join-Path $out "MiniBrowser"
           New-Item -ItemType Directory -Force -Path $pkg | Out-Null
