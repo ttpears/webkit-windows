@@ -25,6 +25,11 @@ jobs:
           git config --global core.autocrlf input
           git config --global core.longpaths true
 
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
       - name: Install dependencies (WinGet)
         shell: powershell
         run: |
@@ -39,7 +44,6 @@ jobs:
             "Git.Git",
             "Kitware.CMake",
             "Ninja-build.Ninja",
-            "Python.Python.3.11",
             "RubyInstallerTeam.Ruby.3.2",
             "ApacheFriends.Xampp.8.2",
             "LLVM.LLVM"
@@ -114,6 +118,8 @@ jobs:
           if (-not (Test-Path $vcvars)) { throw "vcvars64.bat not found at $vcvars" }
 
           $env:PATH = "C:\xampp\apache\bin;C:\xampp\perl\bin;C:\xampp\mysql\bin;C:\Program Files\CMake\bin;C:\Program Files\Ninja;C:\Program Files\Git\usr\bin;C:\Program Files\Git\bin;C:\Program Files\LLVM\bin;C:\Program Files (x86)\GnuWin32\bin;$env:PATH"
+          $env:PYTHON = "python"
+          $env:PYTHON3 = "python"
           $env:WEBKIT_LIBRARIES = Join-Path $env:WEBKIT_DIR "WebKitLibraries\win"
           $env:WEBKIT_OUTPUTDIR = Join-Path $env:WEBKIT_DIR "WebKitBuild"
           $env:WEBKIT_TESTFONTS = Join-Path $env:WEBKIT_DIR "Tools\WebKitTestRunner\fonts"
