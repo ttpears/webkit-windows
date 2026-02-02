@@ -96,7 +96,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.WEBKIT_DIR }}/WebKitBuild
-          key: webkit-build-${{ runner.os }}-${{ steps.webkit-sha.outputs.sha }}
+          key: webkit-build-${{ runner.os }}-${{ steps.webkit-sha.outputs.sha }}-cmake-export-off-v1
           restore-keys: |
             webkit-build-${{ runner.os }}-
 
@@ -120,6 +120,7 @@ jobs:
           $env:PATH = "C:\xampp\apache\bin;C:\xampp\perl\bin;C:\xampp\mysql\bin;C:\Program Files\CMake\bin;C:\Program Files\Ninja;C:\Program Files\Git\usr\bin;C:\Program Files\Git\bin;C:\Program Files\LLVM\bin;C:\Program Files (x86)\GnuWin32\bin;$env:PATH"
           $env:PYTHON = "python"
           $env:PYTHON3 = "python"
+          $env:CMAKE_EXPORT_COMPILE_COMMANDS = "OFF"
           $env:WEBKIT_LIBRARIES = Join-Path $env:WEBKIT_DIR "WebKitLibraries\win"
           $env:WEBKIT_OUTPUTDIR = Join-Path $env:WEBKIT_DIR "WebKitBuild"
           $env:WEBKIT_TESTFONTS = Join-Path $env:WEBKIT_DIR "Tools\WebKitTestRunner\fonts"
@@ -128,6 +129,9 @@ jobs:
           $env:CXX = "clang-cl"
           $env:PATH = "$env:WEBKIT_LIBRARIES\bin;$env:PATH"
 
+          if (Test-Path "$env:WEBKIT_OUTPUTDIR\\CMakeCache.txt") {
+            Remove-Item -Force "$env:WEBKIT_OUTPUTDIR\\CMakeCache.txt"
+          }
           cmd /c "call `"$vcvars`" && cd /d `"$env:WEBKIT_DIR`" && perl Tools\Scripts\build-webkit --release --cmakeargs=\"-DCMAKE_EXPORT_COMPILE_COMMANDS=OFF\""
 
       - name: Package MiniBrowser zip
