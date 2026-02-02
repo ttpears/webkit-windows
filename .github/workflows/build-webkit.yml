@@ -128,7 +128,7 @@ jobs:
           $env:CXX = "clang-cl"
           $env:PATH = "$env:WEBKIT_LIBRARIES\bin;$env:PATH"
 
-          cmd /c "call `"$vcvars`" && cd /d `"$env:WEBKIT_DIR`" && perl Tools\Scripts\build-webkit --release"
+          cmd /c "call `"$vcvars`" && cd /d `"$env:WEBKIT_DIR`" && perl Tools\Scripts\build-webkit --release --cmakeargs=\"-DCMAKE_EXPORT_COMPILE_COMMANDS=OFF\""
 
       - name: Package MiniBrowser zip
         shell: powershell
