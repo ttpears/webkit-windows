@@ -21,6 +21,7 @@ jobs:
         shell: powershell
         run: |
           git config --global core.autocrlf input
+          git config --global core.longpaths true
 
       - name: Install dependencies (WinGet)
         shell: powershell
@@ -49,7 +50,7 @@ jobs:
       - name: Clone WebKit
         shell: powershell
         run: |
-          git clone https://github.com/WebKit/WebKit.git WebKit
+          git -c core.longpaths=true clone --depth 1 --filter=blob:none --single-branch https://github.com/WebKit/WebKit.git WebKit
 
       - name: Resolve WebKit SHA
         id: webkit-sha
