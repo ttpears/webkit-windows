@@ -162,6 +162,12 @@ jobs:
 
           $pkg = Join-Path $out "MiniBrowser"
           New-Item -ItemType Directory -Force -Path $pkg | Out-Null
+          $resOut = Join-Path $pkg "Resources"
+          $libOut = Join-Path $pkg "lib"
+          $shareOut = Join-Path $pkg "share"
+          New-Item -ItemType Directory -Force -Path $resOut | Out-Null
+          New-Item -ItemType Directory -Force -Path $libOut | Out-Null
+          New-Item -ItemType Directory -Force -Path $shareOut | Out-Null
 
           $miniBrowser = $null
           if (Test-Path "$bin64\MiniBrowser.exe") { $miniBrowser = "$bin64\MiniBrowser.exe" }
@@ -174,6 +180,26 @@ jobs:
           if (Test-Path $bin) { Copy-Item "$bin\*.dll" $pkg -ErrorAction SilentlyContinue }
           if (Test-Path $libs) {
             Copy-Item "$libs\*.dll" $pkg -ErrorAction SilentlyContinue
+          }
+          $resources = Join-Path $env:WEBKIT_DIR "WebKitBuild\Release\Resources"
+          if (Test-Path $resources) {
+            Copy-Item "$resources\*" $resOut -Recurse -Force
+          }
+          $libDir = Join-Path $env:WEBKIT_DIR "WebKitBuild\Release\lib"
+          if (Test-Path $libDir) {
+            Copy-Item "$libDir\*" $libOut -Recurse -Force
+          }
+          $shareDir = Join-Path $env:WEBKIT_DIR "WebKitBuild\Release\share"
+          if (Test-Path $shareDir) {
+            Copy-Item "$shareDir\*" $shareOut -Recurse -Force
+          }
+          if (Test-Path $bin64) {
+            Copy-Item "$bin64\*.dat" $pkg -ErrorAction SilentlyContinue
+            Copy-Item "$bin64\*.pak" $pkg -ErrorAction SilentlyContinue
+          }
+          if (Test-Path $bin) {
+            Copy-Item "$bin\*.dat" $pkg -ErrorAction SilentlyContinue
+            Copy-Item "$bin\*.pak" $pkg -ErrorAction SilentlyContinue
           }
 
           $zipName = "webkit-windows-${env:GITHUB_REF_NAME}.zip"
