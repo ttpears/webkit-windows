@@ -1,0 +1,93 @@
+name: package-only
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Run ID from build-webkit-windows to fetch artifacts"
+        required: true
+      tag_name:
+        description: "Release tag to publish (e.g., v0.2.1)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - name: Download build outputs artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: webkit-build-outputs
+          path: build-outputs
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Package MiniBrowser zip
+        shell: powershell
+        run: |
+          $out = Join-Path $env:GITHUB_WORKSPACE "dist"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+
+          $bin64 = Join-Path $env:GITHUB_WORKSPACE "build-outputs\WebKitBuild\Release\bin64"
+          $bin = Join-Path $env:GITHUB_WORKSPACE "build-outputs\WebKitBuild\Release\bin"
+          $libs = Join-Path $env:GITHUB_WORKSPACE "build-outputs\WebKitLibraries\win\bin"
+          $pkg = Join-Path $out "MiniBrowser"
+          New-Item -ItemType Directory -Force -Path $pkg | Out-Null
+          $resOut = Join-Path $pkg "Resources"
+          $libOut = Join-Path $pkg "lib"
+          $shareOut = Join-Path $pkg "share"
+          New-Item -ItemType Directory -Force -Path $resOut | Out-Null
+          New-Item -ItemType Directory -Force -Path $libOut | Out-Null
+          New-Item -ItemType Directory -Force -Path $shareOut | Out-Null
+
+          $miniBrowser = $null
+          if (Test-Path "$bin64\MiniBrowser.exe") { $miniBrowser = "$bin64\MiniBrowser.exe" }
+          elseif (Test-Path "$bin\MiniBrowser.exe") { $miniBrowser = "$bin\MiniBrowser.exe" }
+          if (-not $miniBrowser) {
+            throw "MiniBrowser.exe not found in $bin64 or $bin"
+          }
+          Copy-Item $miniBrowser $pkg
+          if (Test-Path $bin64) { Copy-Item "$bin64\*.dll" $pkg -ErrorAction SilentlyContinue }
+          if (Test-Path $bin) { Copy-Item "$bin\*.dll" $pkg -ErrorAction SilentlyContinue }
+          if (Test-Path $libs) {
+            Copy-Item "$libs\*.dll" $pkg -ErrorAction SilentlyContinue
+          }
+          $resources = Join-Path $env:GITHUB_WORKSPACE "build-outputs\WebKitBuild\Release\Resources"
+          if (Test-Path $resources) {
+            Copy-Item "$resources\*" $resOut -Recurse -Force
+          }
+          $libDir = Join-Path $env:GITHUB_WORKSPACE "build-outputs\WebKitBuild\Release\lib"
+          if (Test-Path $libDir) {
+            Copy-Item "$libDir\*" $libOut -Recurse -Force
+          }
+          $shareDir = Join-Path $env:GITHUB_WORKSPACE "build-outputs\WebKitBuild\Release\share"
+          if (Test-Path $shareDir) {
+            Copy-Item "$shareDir\*" $shareOut -Recurse -Force
+          }
+          if (Test-Path $bin64) {
+            Copy-Item "$bin64\*.dat" $pkg -ErrorAction SilentlyContinue
+            Copy-Item "$bin64\*.pak" $pkg -ErrorAction SilentlyContinue
+          }
+          if (Test-Path $bin) {
+            Copy-Item "$bin\*.dat" $pkg -ErrorAction SilentlyContinue
+            Copy-Item "$bin\*.pak" $pkg -ErrorAction SilentlyContinue
+          }
+
+          $zipName = "webkit-windows-${{ inputs.tag_name }}.zip"
+          Compress-Archive -Path "$pkg\*" -DestinationPath (Join-Path $out $zipName) -Force
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webkit-windows-zip
+          path: dist/*.zip
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true
+          tag_name: ${{ inputs.tag_name }}
