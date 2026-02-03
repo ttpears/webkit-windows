@@ -156,14 +156,22 @@ jobs:
           $out = Join-Path $env:GITHUB_WORKSPACE "dist"
           New-Item -ItemType Directory -Force -Path $out | Out-Null
 
-          $bin = Join-Path $env:WEBKIT_DIR "WebKitBuild\Release\bin64"
+          $bin64 = Join-Path $env:WEBKIT_DIR "WebKitBuild\Release\bin64"
+          $bin = Join-Path $env:WEBKIT_DIR "WebKitBuild\Release\bin"
           $libs = Join-Path $env:WEBKIT_DIR "WebKitLibraries\win\bin"
 
           $pkg = Join-Path $out "MiniBrowser"
           New-Item -ItemType Directory -Force -Path $pkg | Out-Null
 
-          Copy-Item "$bin\MiniBrowser.exe" $pkg
-          Copy-Item "$bin\*.dll" $pkg -ErrorAction SilentlyContinue
+          $miniBrowser = $null
+          if (Test-Path "$bin64\MiniBrowser.exe") { $miniBrowser = "$bin64\MiniBrowser.exe" }
+          elseif (Test-Path "$bin\MiniBrowser.exe") { $miniBrowser = "$bin\MiniBrowser.exe" }
+          if (-not $miniBrowser) {
+            throw "MiniBrowser.exe not found in $bin64 or $bin"
+          }
+          Copy-Item $miniBrowser $pkg
+          if (Test-Path $bin64) { Copy-Item "$bin64\*.dll" $pkg -ErrorAction SilentlyContinue }
+          if (Test-Path $bin) { Copy-Item "$bin\*.dll" $pkg -ErrorAction SilentlyContinue }
           if (Test-Path $libs) {
             Copy-Item "$libs\*.dll" $pkg -ErrorAction SilentlyContinue
           }
