@@ -2,6 +2,10 @@ name: build-webkit-windows
 
 on:
   workflow_dispatch:
+    inputs:
+      webkit_sha:
+        description: "Optional WebKit commit SHA to build"
+        required: false
   push:
     tags:
       - "v*"
@@ -57,7 +61,12 @@ jobs:
         id: webkit-sha
         shell: powershell
         run: |
-          $sha = (git ls-remote https://github.com/WebKit/WebKit.git HEAD).Split("`t")[0].Trim()
+          $inputSha = "${{ github.event.inputs.webkit_sha }}"
+          if ($inputSha) {
+            $sha = $inputSha.Trim()
+          } else {
+            $sha = (git ls-remote https://github.com/WebKit/WebKit.git HEAD).Split("`t")[0].Trim()
+          }
           if (-not $sha) { throw "Failed to resolve WebKit HEAD SHA." }
           "sha=$sha" >> $env:GITHUB_OUTPUT
 
@@ -75,6 +84,11 @@ jobs:
         shell: powershell
         run: |
           git -c core.longpaths=true clone --depth 1 --single-branch https://github.com/WebKit/WebKit.git $env:WEBKIT_DIR
+          $sha = "${{ steps.webkit-sha.outputs.sha }}"
+          if ($sha) {
+            git -C $env:WEBKIT_DIR fetch --depth 1 origin $sha
+            git -C $env:WEBKIT_DIR checkout $sha
+          }
 
       - name: Verify WebKit checkout
         shell: powershell
