@@ -50,6 +50,12 @@ jobs:
             throw "MiniBrowser.exe not found in $bin64 or $bin"
           }
           Copy-Item $miniBrowser $pkg
+          if (Test-Path "$bin64\\WebKitWebProcess.exe") { Copy-Item "$bin64\\WebKitWebProcess.exe" $pkg -ErrorAction SilentlyContinue }
+          if (Test-Path "$bin64\\WebKitNetworkProcess.exe") { Copy-Item "$bin64\\WebKitNetworkProcess.exe" $pkg -ErrorAction SilentlyContinue }
+          if (Test-Path "$bin64\\WebKitGPUProcess.exe") { Copy-Item "$bin64\\WebKitGPUProcess.exe" $pkg -ErrorAction SilentlyContinue }
+          if (Test-Path "$bin\\WebKitWebProcess.exe") { Copy-Item "$bin\\WebKitWebProcess.exe" $pkg -ErrorAction SilentlyContinue }
+          if (Test-Path "$bin\\WebKitNetworkProcess.exe") { Copy-Item "$bin\\WebKitNetworkProcess.exe" $pkg -ErrorAction SilentlyContinue }
+          if (Test-Path "$bin\\WebKitGPUProcess.exe") { Copy-Item "$bin\\WebKitGPUProcess.exe" $pkg -ErrorAction SilentlyContinue }
           if (Test-Path $bin64) { Copy-Item "$bin64\*.dll" $pkg -ErrorAction SilentlyContinue }
           if (Test-Path $bin) { Copy-Item "$bin\*.dll" $pkg -ErrorAction SilentlyContinue }
           if (Test-Path $libs) {
@@ -58,6 +64,10 @@ jobs:
           $resources = Join-Path $env:GITHUB_WORKSPACE "build-outputs\WebKitBuild\Release\Resources"
           if (Test-Path $resources) {
             Copy-Item "$resources\*" $resOut -Recurse -Force
+          }
+          $webkitResources = Join-Path $env:GITHUB_WORKSPACE "build-outputs\WebKitBuild\Release\bin\WebKit.resources"
+          if (Test-Path $webkitResources) {
+            Copy-Item $webkitResources (Join-Path $pkg "WebKit.resources") -Recurse -Force
           }
           $libDir = Join-Path $env:GITHUB_WORKSPACE "build-outputs\WebKitBuild\Release\lib"
           if (Test-Path $libDir) {
