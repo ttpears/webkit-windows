@@ -42,6 +42,13 @@ jobs:
           New-Item -ItemType Directory -Force -Path $resOut | Out-Null
           New-Item -ItemType Directory -Force -Path $libOut | Out-Null
           New-Item -ItemType Directory -Force -Path $shareOut | Out-Null
+          $versionPath = Join-Path $pkg "VERSION.txt"
+          $versionText = @(
+            "Build run: ${{ inputs.run_id }}",
+            "Build ref: ${{ inputs.tag_name }}",
+            "Build time (UTC): $(Get-Date -AsUTC -Format o)"
+          ) -join "`r`n"
+          Set-Content -Path $versionPath -Value $versionText -NoNewline
 
           $miniBrowser = $null
           if (Test-Path "$bin64\MiniBrowser.exe") { $miniBrowser = "$bin64\MiniBrowser.exe" }
