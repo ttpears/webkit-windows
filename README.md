@@ -20,3 +20,9 @@ you can publish a new ZIP without rebuilding by running the `package-only`
 workflow and providing the run ID and a new tag.
 
 Workflow: `.github/workflows/package-only.yml`
+
+## Usage (MiniBrowser)
+
+1) Download the latest release ZIP and extract it.
+2) Run `MiniBrowser.exe` from the extracted folder (not from inside the ZIP).
+3) If Windows shows a security warning, click **More info** and then **Run anyway**.

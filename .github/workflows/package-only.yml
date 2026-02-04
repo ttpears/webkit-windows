@@ -46,7 +46,7 @@ jobs:
           $versionText = @(
             "Build run: ${{ inputs.run_id }}",
             "Build ref: ${{ inputs.tag_name }}",
-            "Build time (UTC): $(Get-Date -AsUTC -Format o)"
+            "Build time (UTC): $((Get-Date).ToUniversalTime().ToString("o"))"
           ) -join "`r`n"
           Set-Content -Path $versionPath -Value $versionText -NoNewline
 

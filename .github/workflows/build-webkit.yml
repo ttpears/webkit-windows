@@ -199,7 +199,7 @@ jobs:
           $versionText = @(
             "WebKit SHA: ${{ steps.webkit-sha.outputs.sha }}",
             "Build ref: $env:GITHUB_REF_NAME",
-            "Build time (UTC): $(Get-Date -AsUTC -Format o)"
+            "Build time (UTC): $((Get-Date).ToUniversalTime().ToString("o"))"
           ) -join "`r`n"
           Set-Content -Path $versionPath -Value $versionText -NoNewline
 
